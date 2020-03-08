@@ -22,7 +22,7 @@ class plp1 {
           }
         } else System.out.println("Error, uso: java plp1 <nomfichero>");
         //TEST
-        String filename = plp1.class.getClassLoader().getResource("r.txt").getFile();
+        String filename = plp1.class.getClassLoader().getResource("p03.txt").getFile();
         try {
           RandomAccessFile entrada = new RandomAccessFile(filename,"r");
           AnalizadorLexico al = new AnalizadorLexico(entrada);

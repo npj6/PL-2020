@@ -385,6 +385,8 @@ public class AnalizadorLexico {
             estado = 0;
         } else if (c==EOF) {
             estado = -1;
+        } else if (c=='*') {
+            estado = 24;
         }
         return estado;
     }
