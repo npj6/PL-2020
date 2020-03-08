@@ -1,0 +1,21 @@
+( ) :
+{ } ;
++ - /*holaaaaaaa eso es la muerte . . . ! ?*/ * /=
+== < <= > >= != muerte prinT
+/*MAS COMENTARIOS*/
+class fun print float int
+if else fi
+id
+/**/
+id
+/*-*!_*!*/* **/
+id
+12341243
+123039012.1234123412
+1234.4
+/* bitch
+asdfas
+*/
+g
+/* asldjflkas
+asfdaf*/

@@ -20,7 +20,23 @@ class plp1 {
           catch (FileNotFoundException e) {
             System.out.println("Error, fichero no encontrado: " + args[0]);
           }
-        } 
-        else System.out.println("Error, uso: java plp1 <nomfichero>");
+        } else System.out.println("Error, uso: java plp1 <nomfichero>");
+        //TEST
+        String filename = plp1.class.getClassLoader().getResource("r.txt").getFile();
+        try {
+          RandomAccessFile entrada = new RandomAccessFile(filename,"r");
+          AnalizadorLexico al = new AnalizadorLexico(entrada);
+          Token t;
+          while((t = al.siguienteToken()).tipo != Token.EOF) {
+            System.out.println("Token: "+t.lexema);
+            System.out.println("Tipo: "+t.toString());
+            System.out.println("En: ("+t.fila+","+t.columna+")");
+            System.out.println();
+          }
+        }
+        catch (FileNotFoundException e) {
+          System.out.println("Error, fichero no encontrado: " + filename);
+          System.out.println(System.getProperty("user.dir"));
+        }
     }
 }
