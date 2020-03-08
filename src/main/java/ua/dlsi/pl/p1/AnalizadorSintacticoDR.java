@@ -1,5 +1,6 @@
 package ua.dlsi.pl.p1;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,7 +9,7 @@ public class AnalizadorSintacticoDR {
     private Token token;
     private AnalizadorLexico al;
     
-    private boolean mostrarNumeros = false;
+    private boolean mostrarNumeros = true;
     private StringBuilder numeros = new StringBuilder();
     
     public void toggleMostrarNumeros() {
@@ -20,12 +21,38 @@ public class AnalizadorSintacticoDR {
         token = al.siguienteToken();
     }
     
+    static private ArrayList<Integer> order = new ArrayList<Integer>();
+    
+    static{
+        order.add(Token.CLASS);
+        order.add(Token.ID);
+        order.add(Token.LBRA);
+        order.add(Token.RBRA);
+        order.add(Token.FUN);
+        order.add(Token.PYC);
+        order.add(Token.INT);
+        order.add(Token.FLOAT);
+        order.add(Token.ASIG);
+        order.add(Token.IF);
+        order.add(Token.DOSP);
+        order.add(Token.ELSE);
+        order.add(Token.FI);
+        order.add(Token.PRINT);
+        order.add(Token.OPREL);
+        order.add(Token.OPAS);
+        order.add(Token.OPMUL);
+        order.add(Token.NUMENTERO);
+        order.add(Token.NUMREAL);
+        order.add(Token.PARI);
+        order.add(Token.PARD);
+    }
+    
     private void errorSintaxis(int ... tokenEsperados) {
         String output = "";
         for (int i=0; i<Token.nombreToken.size(); i++) {
             for (Integer t : tokenEsperados) {
-                if(i==t) {
-                    output += " "+Token.nombreToken.get(i);
+                if(t.equals(order.get(i))) {
+                    output += " "+Token.nombreToken.get(t);
                     break;
                 }
             }
