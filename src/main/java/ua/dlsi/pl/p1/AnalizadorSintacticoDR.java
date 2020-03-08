@@ -45,6 +45,7 @@ public class AnalizadorSintacticoDR {
         order.add(Token.NUMREAL);
         order.add(Token.PARI);
         order.add(Token.PARD);
+        order.add(Token.EOF);
     }
     
     private void errorSintaxis(int ... tokenEsperados) {
@@ -58,7 +59,7 @@ public class AnalizadorSintacticoDR {
             }
         }
         if (token.tipo != Token.EOF) {
-            System.err.println("Error sintactico ("+token.fila+","+token.columna+"): encontrado "+token.lexema+", esperaba"+output);
+            System.err.println("Error sintactico ("+token.fila+","+token.columna+"): encontrado '"+token.lexema+"', esperaba"+output);
         } else {
             System.err.println("Error sintactico: encontrado fin de fichero, esperaba"+output);
         }
@@ -95,7 +96,7 @@ public class AnalizadorSintacticoDR {
                 M();
                 break;
             case Token.CLASS:
-                numeros.append("3 ·");
+                numeros.append("3 ");
                 S();
                 M();
                 break;
