@@ -15,7 +15,7 @@ public class Token {
 		nombreToken.add(")");
 		nombreToken.add(":");
 		nombreToken.add("{");
-		nombreToken.add("{");
+		nombreToken.add("}");
 		nombreToken.add("=");
 		nombreToken.add(";");
 		nombreToken.add("< <= > >= == !=");
