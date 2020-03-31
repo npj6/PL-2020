@@ -1,0 +1,10 @@
+class Main {
+  fun f {
+    print a+b    
+  }
+  fun main 
+    c = 7           /* Error en 'c', esperaba {    */
+
+  }
+}
+

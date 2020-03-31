@@ -1,20 +1,14 @@
 class Main {
-  fun main  int a {
+  fun main  {
 
-    print 2<3;
-    print 2==3;
-    print 2<=3;
-    print 2>3;
-    print 2>=3;
-    print 2!=3;
     float printando;
 
-    printando=1234/1*1+0.1-123.456*12.34;
+    printando=1234-1+1+0.1-123.456+12.34;
 
     {
       int b;
 
-      b == 7    /* Error en '==', esperaba = **/
+      b + 7    /* Error en '+', esperaba = **/
     }
   }
 }

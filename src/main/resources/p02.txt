@@ -1,5 +1,5 @@
 class Main {
-  fun main  int a {
+  fun main  {
 
     /* comentarios maliciosos */
     /*1*/

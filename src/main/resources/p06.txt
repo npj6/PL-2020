@@ -1,0 +1,27 @@
+class Main {
+  fun f  {
+    print a+b    
+  }
+  class A {
+    fun AA  {
+      fun AAA {
+        print a+b
+      }
+      float c;
+      {
+        c = 7.4;
+        int d;
+
+          print c+10;
+          print a+10;
+          print c+15
+      };
+      print a+25
+    }
+  }
+  fun main {
+    float c;
+
+    print 2 + 3
+  }
+}
