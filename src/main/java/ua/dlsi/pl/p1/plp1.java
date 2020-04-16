@@ -4,7 +4,7 @@ import java.io.RandomAccessFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-class plp1 {
+public class plp1 {
     public static void main(String[] args) {
 
         if (args.length == 1)
