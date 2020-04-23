@@ -18,7 +18,9 @@ public class AnalizadorLexico {
     int columna_token;
     
     //disables the SOC detection
-    private boolean readingComment = false;
+    //private boolean readingComment = false;
+    //Now done by understanding SOC is equivalent to *
+    //So SOC/ -> /*/ which means comment is over
     
     private static final char EOF = (char) -1; //End Of File
     private static final char SOC = (char) -2; //Start Of Comment
@@ -79,7 +81,7 @@ public class AnalizadorLexico {
             //Si buffer esta vacio, lees del fichero
             output = readByte();
             //Comprobar SOC
-            if (output == '/' && !readingComment) {
+            if (output == '/') {
                     output = readByte();
                 if (output == '*') {
                     //Si es SOC devueves SOC
@@ -217,7 +219,6 @@ public class AnalizadorLexico {
                 estado = 0;
                 break;
             case SOC:
-                readingComment = true;
                 estado = 23;
                 break;
             case EOF:
@@ -379,14 +380,20 @@ public class AnalizadorLexico {
     }
     private int estado24() {
         char c = siguienteChar();
-        int estado = 23;
-        if (c == '/') {
-            readingComment = false;
-            estado = 0;
-        } else if (c==EOF) {
-            estado = -1;
-        } else if (c=='*') {
-            estado = 24;
+        int estado;
+        switch (c) {
+            case '/':
+                estado = 0;
+                break;
+            case EOF:
+                estado = -1;
+                break;
+            case '*':
+            case SOC:
+                estado = 24;
+                break;
+            default:
+                estado = 23;
         }
         return estado;
     }
