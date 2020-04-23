@@ -8,19 +8,78 @@ import java.util.List;
 
 public class TraductorDR {
     
+    public TraductorDR(AnalizadorLexico al) {
+        this.al = al;
+        token = al.siguienteToken();
+    }
+    
+    //TABLA SIMBOLOS
+
+    private TablaSimbolos tsActual = new TablaSimbolos(null);
+
+    private void crearAmbito() {
+        tsActual = new TablaSimbolos(tsActual);
+    }
+    private void cerrarAmbito() {
+        tsActual = tsActual.getPadre();
+    }
+
+    private void crearSimbolo(String nombre, int tipoSimbolo, String nombreTrad) {
+        boolean creado = tsActual.anyadir(new Simbolo(nombre, tipoSimbolo, nombreTrad));
+        if (!creado) {
+            errorSemantico(1);
+        }
+    }
+    
+    //FALTA COMPROBAR ERROR SEMANTICO 4
+    private Simbolo buscarSimbolo(String nombre) {
+        Simbolo output = tsActual.buscar(nombre);
+        if(output == null) {
+            errorSemantico(2);
+        }
+        return output;
+    }
+    
+    //ANALIZADOR LEXICO
+    
     private Token token;
     private AnalizadorLexico al;
     
-    private boolean mostrarNumeros = true;
+    //SECUENCIA DE REGLAS
+    
     private StringBuilder numeros = new StringBuilder();
     
+    private boolean mostrarNumeros = true;
     public void toggleMostrarNumeros() {
         mostrarNumeros = !mostrarNumeros;
     }
     
-    public TraductorDR(AnalizadorLexico al) {
-        this.al = al;
-        token = al.siguienteToken();
+    //MENSAJES DE ERROR
+    private Token tokenError;
+    
+    private void errorSemantico(int codErr) {
+        String output = "Error semantico ("+tokenError.fila+","+tokenError.columna+"): '"+tokenError.lexema+"'";
+        switch(codErr) {
+            case 1:
+                output += ", ya existe en este ambito";
+                break;
+            case 2:
+                output += ", no ha sido declarado";
+                break;
+            case 3:
+                output += ", tipos incompatibles entero/real";
+                break;
+            case 4:
+                output += " debe ser de tipo entero o real";
+                break;
+            case 5:
+                output += " debe ser de tipo entero";
+                break;
+            default:
+                output = ", esto no deberia de estar ocurriendo. La simulacion esta fallando.";
+        }
+        System.err.println(output);
+        System.exit(-1);
     }
     
     static private ArrayList<Integer> order = new ArrayList<Integer>();
@@ -67,6 +126,8 @@ public class TraductorDR {
         }
         System.exit(-1);
     }
+    
+    //REGLAS DE LA GRAMATICA 
     
     public final String emparejar(int tokenEsperado) {
         //calcula la indentación segun los tipos del token
