@@ -8,32 +8,66 @@ import java.util.List;
 
 public class TraductorDR {
     
+    public TraductorDR(AnalizadorLexico al) {
+        this.al = al;
+        token = al.siguienteToken();
+    }
+    
+//TABLA SIMBOLOS
+    
+    private TablaSimbolos tsActual = new TablaSimbolos(null);
+    
+    private void crearAmbito() {
+        tsActual = new TablaSimbolos(tsActual);
+    }
+    private void cerrarAmbito() {
+        tsActual = tsActual.getPadre();
+    }
+    
+    private void crearSimbolo(String nombre, int tipoSimbolo, String nombreTrad) {
+        boolean creado = tsActual.anyadir(new Simbolo(nombre, tipoSimbolo, nombreTrad));
+        if (!creado) {
+            errorSemantico(1);
+        }
+    }
+    private Simbolo buscarSimbolo(String nombre) {
+        Simbolo output = tsActual.buscar(nombre);
+        if(output == null) {
+            errorSemantico(2);
+        }
+        return output;
+    }
+    
+    
+//INDENTACION
+    
     private String indent = "";
     
     private void indentUp() {
         indent += "\t";
     }
-    
     private void indentDown() {
         indent = indent.substring(0, indent.length() - 1);
     }
     
     
+//ANALIZADOR LEXICO
     
     private Token token;
     private AnalizadorLexico al;
     
-    private boolean mostrarNumeros = true;
+    
+//SECUENCIA DE REGLAS
+    
     private StringBuilder numeros = new StringBuilder();
     
+    private boolean mostrarNumeros = true;
     public void toggleMostrarNumeros() {
         mostrarNumeros = !mostrarNumeros;
     }
     
-    public TraductorDR(AnalizadorLexico al) {
-        this.al = al;
-        token = al.siguienteToken();
-    }
+    
+//MENSAJES DE ERROR
     
     static private ArrayList<Integer> order = new ArrayList<Integer>();
     
@@ -80,7 +114,35 @@ public class TraductorDR {
         System.exit(-1);
     }
     
-    public final String emparejar(int tokenEsperado) {
+    private void errorSemantico(int codErr) {
+        String output = "Error semantico ("+token.fila+","+token.columna+"): '"+token.lexema+"'";
+        switch(codErr) {
+            case 1:
+                output += ", ya existe en este ambito";
+                break;
+            case 2:
+                output += ", no ha sido declarado";
+                break;
+            case 3:
+                output += ", tipos incompatibles entero/real";
+                break;
+            case 4:
+                output += " debe ser de tipo entero o real";
+                break;
+            case 5:
+                output += " debe ser de tipo entero";
+                break;
+            default:
+                output = ", esto no deberia de estar ocurriendo. La simulacion esta fallando.";
+        }
+        System.err.println(output);
+        System.exit(-1);
+    }
+    
+    
+//REGLAS DE LA GRAMATICA
+    
+    public final String emparejar(int tokenEsperado, SimboloWrapper salida_simbolo) {
         //calcula la indentación segun los tipos del token
         switch(token.tipo) {
             case Token.LBRA:
@@ -93,6 +155,14 @@ public class TraductorDR {
         String output = "";
         if (token.tipo == tokenEsperado) {
             output = token.lexema;
+            //comprueba que exista el identificador y devuelve su traduccion (si es id)
+            if(token.tipo == Token.ID) {
+                Simbolo simb = buscarSimbolo(token.lexema);
+                if (salida_simbolo != null) {
+                    salida_simbolo.value = simb;
+                }
+                output = simb.nomtrad;
+            }
             token = al.siguienteToken();
         } else {
             errorSintaxis(tokenEsperado);
@@ -100,18 +170,22 @@ public class TraductorDR {
         return output;
     }
     
+    
     //EDITADO PREFIJO INICIAL
-    public String S(String s) {
+    public String S(String entrada_prefijo) {
         String output = "";
         switch(token.tipo) {
             case Token.CLASS:
                 numeros.append("1 ");
-                output += emparejar(Token.CLASS) + " ";
-                output += emparejar(Token.ID) + " ";
-                output += emparejar(Token.LBRA) + "\n" + indent;
+                output += emparejar(Token.CLASS, null) + " ";
+                crearSimbolo(token.lexema, Simbolo.CLASS, "CLASS_"+token.lexema);
+                output += emparejar(Token.ID, null) + " ";
+                crearAmbito();
+                output += emparejar(Token.LBRA, null) + "\n" + indent;
                 output += M() + "\n" + indent;
                 output = output.substring(0, output.length() - 1);
-                output += emparejar(Token.RBRA) + "\n" + indent;
+                output += emparejar(Token.RBRA, null) + "\n" + indent;
+                cerrarAmbito();
                 break;
             default:
                 errorSintaxis(Token.CLASS);
@@ -150,14 +224,17 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.FUN:
                 numeros.append("5 ");
-                output += emparejar(Token.FUN) + " ";
-                output += emparejar(Token.ID) + " ";
+                output += emparejar(Token.FUN, null) + " ";
+                crearSimbolo(token.lexema, Simbolo.FUN, "FUN_"+token.lexema);
+                output += emparejar(Token.ID, null) + " ";
+                crearAmbito();
                 output += A();
-                output += emparejar(Token.LBRA) + "\n" + indent;
+                output += emparejar(Token.LBRA, null) + "\n" + indent;
                 output += M();
                 output += Cod();
                 output = output.substring(0, output.length() - 1);
-                output += emparejar(Token.RBRA) + "\n" + indent;
+                output += emparejar(Token.RBRA, null) + "\n" + indent;
+                cerrarAmbito();
                 break;
             default:
                 errorSintaxis(Token.FUN);
@@ -183,7 +260,7 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.PYC:
                 numeros.append("7 ");
-                output += emparejar(Token.PYC) + " ";
+                output += emparejar(Token.PYC, null) + " ";
                 output += DV();
                 output += Ap();
                 break;
@@ -201,24 +278,38 @@ public class TraductorDR {
             case Token.INT:
             case Token.FLOAT:
                 numeros.append("9 ");
-                output += Tipo();
-                output += emparejar(Token.ID) + " ";
+                IntegerWrapper tipo = new IntegerWrapper();
+                output += Tipo(tipo);
+                String prefix = "";
+                switch(tipo.value) {
+                    case Simbolo.ENTERO:
+                        prefix = "ENTERO_";
+                        break;
+                    case Simbolo.REAL:
+                        prefix = "REAL_";
+                        break;
+                    default:
+                }
+                crearSimbolo(token.lexema, tipo.value, prefix+token.lexema);
+                output += emparejar(Token.ID, null) + " ";
                 break;
             default:
                 errorSintaxis(Token.INT, Token.FLOAT);
         }
         return output;
     }
-    public String Tipo() {
+    public String Tipo(IntegerWrapper salida_tipo) {
         String output = "";
         switch(token.tipo) {
             case Token.INT:
                 numeros.append("10 ");
-                output += emparejar(Token.INT) + " ";
+                salida_tipo.value = Simbolo.ENTERO;
+                output += emparejar(Token.INT, null) + " ";
                 break;
             case Token.FLOAT:
+                salida_tipo.value = Simbolo.REAL;
                 numeros.append("11 ");
-                output += emparejar(Token.FLOAT) + " ";
+                output += emparejar(Token.FLOAT, null) + " ";
                 break;
             default:
                 errorSintaxis(Token.INT, Token.FLOAT);
@@ -248,7 +339,7 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.PYC:
                 numeros.append("13 ");
-                output += emparejar(Token.PYC) + "\n" + indent;
+                output += emparejar(Token.PYC, null) + "\n" + indent;
                 output += I();
                 output += Codp();
                 break;
@@ -270,24 +361,27 @@ public class TraductorDR {
                 break;
             case Token.LBRA:
                 numeros.append("16 ");
-                output += emparejar(Token.LBRA) + "\n" + indent;
+                crearAmbito();
+                output += emparejar(Token.LBRA, null) + "\n" + indent;
                 output += Cod();
                 output = output.substring(0, output.length() - 1);
-                output += emparejar(Token.RBRA);
+                output += emparejar(Token.RBRA, null);
+                cerrarAmbito();
                 break;
             case Token.ID:
                 numeros.append("17 ");
-                output += emparejar(Token.ID) + " ";
-                output += emparejar(Token.ASIG) + " ";
+                SimboloWrapper identificador = new SimboloWrapper();
+                output += emparejar(Token.ID, identificador) + " ";
+                output += emparejar(Token.ASIG, null) + " ";
                 output += Expr();
                 break;
             case Token.IF:
                 numeros.append("18 ");
-                output += emparejar(Token.IF) + " ";
+                output += emparejar(Token.IF, null) + " ";
                 output += Expr();
                 
                 indentUp();
-                output += emparejar(Token.DOSP) + "\n" + indent;
+                output += emparejar(Token.DOSP, null) + "\n" + indent;
                 output += I() + "\n" + indent;
                 output = output.substring(0, output.length() - 1); 
                 output += Ip();
@@ -296,7 +390,7 @@ public class TraductorDR {
                 break;
             case Token.PRINT:
                 numeros.append("21 ");
-                output += emparejar(Token.PRINT) + " ";
+                output += emparejar(Token.PRINT, null) + " ";
                 output += Expr();
                 break;
             default:
@@ -309,14 +403,14 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.ELSE:
                 numeros.append("19 ");
-                output += emparejar(Token.ELSE) + "\n" + indent;
+                output += emparejar(Token.ELSE, null) + "\n" + indent;
                 output += I() + "\n" + indent;
                 output = output.substring(0, output.length() - 1);
-                output += emparejar(Token.FI);
+                output += emparejar(Token.FI, null);
                 break;
             case Token.FI:
                 numeros.append("20 ");
-                output += emparejar(Token.FI);
+                output += emparejar(Token.FI, null);
                 break;
             default:
                 errorSintaxis(Token.ELSE, Token.FI);
@@ -344,7 +438,7 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.OPREL:
                 numeros.append("23 ");
-                output += emparejar(Token.OPREL) + " ";
+                output += emparejar(Token.OPREL, null) + " ";
                 output += E();
                 break;
             case Token.PYC:
@@ -381,7 +475,7 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.OPAS:
                 numeros.append("26 ");
-                output += emparejar(Token.OPAS) + " ";
+                output += emparejar(Token.OPAS, null) + " ";
                 output += T();
                 output += Ep();
                 break;
@@ -420,7 +514,7 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.OPMUL:
                 numeros.append("29 ");
-                output += emparejar(Token.OPMUL) + " ";
+                output += emparejar(Token.OPMUL, null) + " ";
                 output += F();
                 output += Tp();
                 break;
@@ -444,21 +538,21 @@ public class TraductorDR {
         switch(token.tipo) {
             case Token.ID:
                 numeros.append("31 ");
-                output += emparejar(Token.ID) + " ";
+                output += emparejar(Token.ID, null) + " ";
                 break;
             case Token.NUMENTERO:
                 numeros.append("32 ");
-                output += emparejar(Token.NUMENTERO) + " ";
+                output += emparejar(Token.NUMENTERO, null) + " ";
                 break;
             case Token.NUMREAL:
                 numeros.append("33 ");
-                output += emparejar(Token.NUMREAL) + " ";
+                output += emparejar(Token.NUMREAL, null) + " ";
                 break;
             case Token.PARI:
                 numeros.append("34 ");
-                output += emparejar(Token.PARI) + " ";
+                output += emparejar(Token.PARI, null) + " ";
                 output += Expr() + " ";
-                output += emparejar(Token.PARD) + " ";
+                output += emparejar(Token.PARD, null) + " ";
                 break;
             default:
                 errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
@@ -466,6 +560,8 @@ public class TraductorDR {
         return output;
     }
     
+    
+//OTRAS COSAS
     public void comprobarFinFichero() {
         if(token.tipo != Token.EOF) {
             errorSintaxis(Token.EOF);
@@ -473,4 +569,7 @@ public class TraductorDR {
             System.out.println(numeros.toString());
         }
     }
+    
+    public class IntegerWrapper {public int value;}
+    public class SimboloWrapper {public Simbolo value;}
 }
