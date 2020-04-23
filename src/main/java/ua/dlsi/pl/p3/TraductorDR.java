@@ -129,14 +129,11 @@ public class TraductorDR {
     
     //REGLAS DE LA GRAMATICA 
     
-    public final String emparejar(int tokenEsperado) {
-        //calcula la indentación segun los tipos del token
-        switch(token.tipo) {
-            case Token.LBRA:
-                break;
-            case Token.RBRA:
-                break;
-        }
+    private class Elemento {
+        public String trad;
+    }
+    
+    private String emparejar(int tokenEsperado) {
         String output = "";
         if (token.tipo == tokenEsperado) {
             output = token.lexema;
@@ -147,329 +144,380 @@ public class TraductorDR {
         return output;
     }
     
+    private class IdToken extends Elemento {
+        public IdToken(int tokenEsperado) { 
+            this.trad = emparejar(tokenEsperado);
+        }
+        
+        public Simbolo symbol;
+    }
+    
+    private class S extends Elemento {
+        public S() {
+            switch(token.tipo) {
+                case Token.CLASS:
+                    numeros.append("1 ");
+                    emparejar(Token.CLASS);
+                    Elemento idT = new IdToken(Token.ID);
+                    emparejar(Token.LBRA);
+                    Elemento M = new M();
+                    emparejar(Token.RBRA);
+                    break;
+                default:
+                    errorSintaxis(Token.CLASS);
+            }
+        }
+    } 
+    private class M extends Elemento {
+        public M() {
+            Elemento M;
+            switch(token.tipo) {
+                case Token.FUN:
+                    numeros.append("2 ");
+                    Elemento Fun = new Fun();
+                    M = new M();
+                    break;
+                case Token.CLASS:
+                    numeros.append("3 ");
+                    Elemento S = new S(); //EDITADO PREFIJO INICIAL
+                    M = new M();
+                    break;
+                case Token.RBRA:
+                case Token.LBRA:
+                case Token.ID:
+                case Token.IF:
+                case Token.PRINT:
+                case Token.INT:
+                case Token.FLOAT:
+                    numeros.append("4 ");
+                    break;
+                default:
+                    errorSintaxis(Token.FUN, Token.CLASS, Token.RBRA, Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
+            }
+        }
+    }
+    private class Fun extends Elemento {
+        public Fun() {
+            switch(token.tipo) {
+                case Token.FUN:
+                    numeros.append("5 ");
+                    emparejar(Token.FUN);
+                    Elemento idT = new IdToken(Token.ID);
+                    Elemento A = new A();
+                    emparejar(Token.LBRA);
+                    Elemento M = new M();
+                    Elemento Cod = new Cod();
+                    emparejar(Token.RBRA);
+                    break;
+                default:
+                    errorSintaxis(Token.FUN);
+            }
+        }
+    }
+    private class A extends Elemento {
+        public A() {
+            switch(token.tipo) {
+                case Token.INT:
+                case Token.FLOAT:
+                    numeros.append("6 ");
+                    Elemento DV = new DV();
+                    Elemento Ap = new Ap();
+                    break;
+                default:
+                    errorSintaxis(Token.INT, Token.FLOAT);
+            }
+        }
+    }
+    private class Ap extends Elemento {
+        public Ap() {
+            switch(token.tipo) {
+                case Token.PYC:
+                    numeros.append("7 ");
+                    emparejar(Token.PYC);
+                    Elemento DV = new DV();
+                    Elemento Ap = new Ap();
+                    break;
+                case Token.LBRA:
+                    numeros.append("8 ");
+                    break;
+                default:
+                    errorSintaxis(Token.PYC, Token.LBRA);
+            }
+        }
+    }
+    private class DV extends Elemento {
+        public DV() {
+            switch(token.tipo) {
+                case Token.INT:
+                case Token.FLOAT:
+                    numeros.append("9 ");
+                    Elemento Tipo = new Tipo();
+                    Elemento idT = new IdToken(Token.ID);
+                    break;
+                default:
+                    errorSintaxis(Token.INT, Token.FLOAT);
+            }
+        }
+    }
+    private class Tipo extends Elemento {
+        public Tipo() {
+            switch(token.tipo) {
+                case Token.INT:
+                    numeros.append("10 ");
+                    emparejar(Token.INT);
+                    break;
+                case Token.FLOAT:
+                    numeros.append("11 ");
+                    emparejar(Token.FLOAT);
+                    break;
+                default:
+                    errorSintaxis(Token.INT, Token.FLOAT);
+            }
+        }
+    }
+    private class Cod extends Elemento {
+        public Cod() {
+            switch(token.tipo) {
+                case Token.LBRA:
+                case Token.ID:
+                case Token.IF:
+                case Token.PRINT:
+                case Token.INT:
+                case Token.FLOAT:
+                    numeros.append("12 ");
+                    Elemento I = new I();
+                    Elemento Codp = new Codp();
+                    break;
+                default:
+                    errorSintaxis(Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
+            }
+        }
+    }
+    private class Codp extends Elemento {
+        public Codp() {
+            switch(token.tipo) {
+                case Token.PYC:
+                    numeros.append("13 ");
+                    emparejar(Token.PYC);
+                    Elemento I = new I();
+                    Elemento Codp = new Codp();
+                    break;
+                case Token.RBRA:
+                    numeros.append("14 ");
+                    break;
+                default:
+                    errorSintaxis(Token.PYC, Token.RBRA);
+            }
+        }
+    }
+    private class I extends Elemento {
+        public I() {
+            Elemento idT, Expr;
+            switch(token.tipo) {
+                case Token.INT:
+                case Token.FLOAT:
+                    numeros.append("15 ");
+                    Elemento DV = new DV();
+                    break;
+                case Token.LBRA:
+                    numeros.append("16 ");
+                    emparejar(Token.LBRA);
+                    Elemento Cod = new Cod();
+                    idT = new IdToken(Token.RBRA);
+                    break;
+                case Token.ID:
+                    numeros.append("17 ");
+                    idT = new IdToken(Token.ID);
+                    emparejar(Token.ASIG);
+                    Expr = new Expr();
+                    break;
+                case Token.IF:
+                    numeros.append("18 ");
+                    emparejar(Token.IF);
+                    Expr = new Expr();
+
+                    emparejar(Token.DOSP);
+                    Elemento I = new I();
+                    Elemento Ip = new Ip();
+
+                    break;
+                case Token.PRINT:
+                    numeros.append("21 ");
+                    emparejar(Token.PRINT);
+                    Expr = new Expr();
+                    break;
+                default:
+                    errorSintaxis(Token.INT, Token.FLOAT, Token.LBRA, Token.ID, Token.IF, Token.PRINT);
+            }
+        }
+    }
+    private class Ip extends Elemento {
+        public Ip() {
+            switch(token.tipo) {
+                case Token.ELSE:
+                    numeros.append("19 ");
+                    emparejar(Token.ELSE);
+                    Elemento I = new I();
+                    emparejar(Token.FI);
+                    break;
+                case Token.FI:
+                    numeros.append("20 ");
+                    emparejar(Token.FI);
+                    break;
+                default:
+                    errorSintaxis(Token.ELSE, Token.FI);
+            }
+        }
+    }
+    private class Expr extends Elemento {
+        public Expr() {
+            switch(token.tipo) {
+                case Token.ID:
+                case Token.NUMENTERO:
+                case Token.NUMREAL:
+                case Token.PARI:
+                    numeros.append("22 ");
+                    Elemento E = new E();
+                    Elemento Experp = new Exprp();
+                    break;
+                default:
+                    errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
+            }
+        }
+    }
+    private class Exprp extends Elemento {
+        public Exprp() {
+            switch(token.tipo) {
+                case Token.OPREL:
+                    numeros.append("23 ");
+                    String oprelLex = emparejar(Token.OPREL);
+                    Elemento E = new E();
+                    break;
+                case Token.PYC:
+                case Token.RBRA:
+                case Token.ELSE:
+                case Token.FI:
+                case Token.DOSP:
+                case Token.PARD:
+                    numeros.append("24 ");
+                    break;
+                default:
+                    errorSintaxis(Token.OPREL, Token.PYC, Token.RBRA, Token.ELSE, Token.FI, Token.DOSP, Token.PARD);
+            }
+        }
+    }
+    private class E extends Elemento {
+        public E() {
+            switch(token.tipo) {
+                case Token.ID:
+                case Token.NUMENTERO:
+                case Token.NUMREAL:
+                case Token.PARI:
+                    numeros.append("25 ");
+                    Elemento T = new T();
+                    Elemento Ep = new Ep();
+                    break;
+                default:
+                    errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
+            }
+        }
+    }
+    private class Ep extends Elemento {
+        public Ep() {
+            switch(token.tipo) {
+                case Token.OPAS:
+                    numeros.append("26 ");
+                    String opasLex = emparejar(Token.OPAS);
+                    Elemento T = new T();
+                    Elemento Ep = new Ep();
+                    break;
+                case Token.OPREL:
+                case Token.PYC:
+                case Token.RBRA:
+                case Token.ELSE:
+                case Token.FI:
+                case Token.DOSP:
+                case Token.PARD:
+                    numeros.append("27 ");
+                    break;
+                default:
+                    errorSintaxis(Token.OPAS, Token.OPREL, Token.PYC, Token.RBRA, Token.ELSE, Token.FI, Token.DOSP, Token.PARD);
+            }
+        }
+    }
+    private class T extends Elemento {
+        public T() {
+            switch(token.tipo) {
+                case Token.ID:
+                case Token.NUMENTERO:
+                case Token.NUMREAL:
+                case Token.PARI:
+                    numeros.append("28 ");
+                    Elemento F = new F();
+                    Elemento Tp = new Tp();
+                    break;
+                default:
+                    errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
+            }
+        }
+    }
+    private class Tp extends Elemento {
+        public Tp() {
+            switch(token.tipo) {
+                case Token.OPMUL:
+                    numeros.append("29 ");
+                    String opmulLex = emparejar(Token.OPMUL);
+                    Elemento F = new F();
+                    Elemento Tp = new Tp();
+                    break;
+                case Token.OPAS:
+                case Token.OPREL:
+                case Token.PYC:
+                case Token.RBRA:
+                case Token.ELSE:
+                case Token.FI:
+                case Token.DOSP:
+                case Token.PARD:
+                    numeros.append("30 ");
+                    break;
+                default:
+                    errorSintaxis(Token.OPMUL, Token.OPAS, Token.OPREL, Token.PYC, Token.RBRA, Token.ELSE, Token.FI, Token.DOSP, Token.PARD);
+            }
+        }
+    }
+    private class F extends Elemento {
+        public F() {
+            switch(token.tipo) {
+                case Token.ID:
+                    numeros.append("31 ");
+                    Elemento idT = new IdToken(Token.ID);
+                    break;
+                case Token.NUMENTERO:
+                    numeros.append("32 ");
+                    String numenteroLex = emparejar(Token.NUMENTERO);
+                    break;
+                case Token.NUMREAL:
+                    numeros.append("33 ");
+                    String numrealLex = emparejar(Token.NUMREAL);
+                    break;
+                case Token.PARI:
+                    numeros.append("34 ");
+                    emparejar(Token.PARI);
+                    Elemento Expr = new Expr();
+                    emparejar(Token.PARD);
+                    break;
+                default:
+                    errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
+            }
+        }
+    }
+    
+    //INTERFAZ PRACTICA
+    
     //EDITADO PREFIJO INICIAL
     public String S(String s) {
-        String output = "";
-        switch(token.tipo) {
-            case Token.CLASS:
-                numeros.append("1 ");
-                emparejar(Token.CLASS);
-                emparejar(Token.ID);
-                emparejar(Token.LBRA);
-                M();
-                emparejar(Token.RBRA);
-                break;
-            default:
-                errorSintaxis(Token.CLASS);
-        }
-        return output; //EDITADO
-    }
-    public void M() {
-        switch(token.tipo) {
-            case Token.FUN:
-                numeros.append("2 ");
-                Fun();
-                M();
-                break;
-            case Token.CLASS:
-                numeros.append("3 ");
-                S(""); //EDITADO PREFIJO INICIAL
-                M();
-                break;
-            case Token.RBRA:
-            case Token.LBRA:
-            case Token.ID:
-            case Token.IF:
-            case Token.PRINT:
-            case Token.INT:
-            case Token.FLOAT:
-                numeros.append("4 ");
-                break;
-            default:
-                errorSintaxis(Token.FUN, Token.CLASS, Token.RBRA, Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
-        }
-    }
-    public void Fun() {
-        switch(token.tipo) {
-            case Token.FUN:
-                numeros.append("5 ");
-                emparejar(Token.FUN);
-                emparejar(Token.ID);
-                A();
-                emparejar(Token.LBRA);
-                M();
-                Cod();
-                emparejar(Token.RBRA);
-                break;
-            default:
-                errorSintaxis(Token.FUN);
-        }
-    }
-    public void A() {
-        switch(token.tipo) {
-            case Token.INT:
-            case Token.FLOAT:
-                numeros.append("6 ");
-                DV();
-                Ap();
-                break;
-            default:
-                errorSintaxis(Token.INT, Token.FLOAT);
-        }
-    }
-    public void Ap() {
-        switch(token.tipo) {
-            case Token.PYC:
-                numeros.append("7 ");
-                emparejar(Token.PYC);
-                DV();
-                Ap();
-                break;
-            case Token.LBRA:
-                numeros.append("8 ");
-                break;
-            default:
-                errorSintaxis(Token.PYC, Token.LBRA);
-        }
-    }
-    public void DV() {
-        switch(token.tipo) {
-            case Token.INT:
-            case Token.FLOAT:
-                numeros.append("9 ");
-                Tipo();
-                emparejar(Token.ID);
-                break;
-            default:
-                errorSintaxis(Token.INT, Token.FLOAT);
-        }
-    }
-    public void Tipo() {
-        switch(token.tipo) {
-            case Token.INT:
-                numeros.append("10 ");
-                emparejar(Token.INT);
-                break;
-            case Token.FLOAT:
-                numeros.append("11 ");
-                emparejar(Token.FLOAT);
-                break;
-            default:
-                errorSintaxis(Token.INT, Token.FLOAT);
-        }
-    }
-    public void Cod() {
-        switch(token.tipo) {
-            case Token.LBRA:
-            case Token.ID:
-            case Token.IF:
-            case Token.PRINT:
-            case Token.INT:
-            case Token.FLOAT:
-                numeros.append("12 ");
-                I();
-                Codp();
-                break;
-            default:
-                errorSintaxis(Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
-        }
-    }
-    public void Codp() {
-        switch(token.tipo) {
-            case Token.PYC:
-                numeros.append("13 ");
-                emparejar(Token.PYC);
-                I();
-                Codp();
-                break;
-            case Token.RBRA:
-                numeros.append("14 ");
-                break;
-            default:
-                errorSintaxis(Token.PYC, Token.RBRA);
-        }
-    }
-    public void I() {
-        switch(token.tipo) {
-            case Token.INT:
-            case Token.FLOAT:
-                numeros.append("15 ");
-                DV();
-                break;
-            case Token.LBRA:
-                numeros.append("16 ");
-                emparejar(Token.LBRA);
-                Cod();
-                emparejar(Token.RBRA);
-                break;
-            case Token.ID:
-                numeros.append("17 ");
-                emparejar(Token.ID);
-                emparejar(Token.ASIG);
-                Expr();
-                break;
-            case Token.IF:
-                numeros.append("18 ");
-                emparejar(Token.IF);
-                Expr();
-                
-                emparejar(Token.DOSP);
-                I();
-                Ip();
-                
-                break;
-            case Token.PRINT:
-                numeros.append("21 ");
-                emparejar(Token.PRINT);
-                Expr();
-                break;
-            default:
-                errorSintaxis(Token.INT, Token.FLOAT, Token.LBRA, Token.ID, Token.IF, Token.PRINT);
-        }
-    }
-    public void Ip() {
-        switch(token.tipo) {
-            case Token.ELSE:
-                numeros.append("19 ");
-                emparejar(Token.ELSE);
-                I();
-                emparejar(Token.FI);
-                break;
-            case Token.FI:
-                numeros.append("20 ");
-                emparejar(Token.FI);
-                break;
-            default:
-                errorSintaxis(Token.ELSE, Token.FI);
-        }
-    }
-    public void Expr() {
-        switch(token.tipo) {
-            case Token.ID:
-            case Token.NUMENTERO:
-            case Token.NUMREAL:
-            case Token.PARI:
-                numeros.append("22 ");
-                E();
-                Exprp();
-                break;
-            default:
-                errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
-        }
-    }
-    public void Exprp() {
-        switch(token.tipo) {
-            case Token.OPREL:
-                numeros.append("23 ");
-                emparejar(Token.OPREL);
-                E();
-                break;
-            case Token.PYC:
-            case Token.RBRA:
-            case Token.ELSE:
-            case Token.FI:
-            case Token.DOSP:
-            case Token.PARD:
-                numeros.append("24 ");
-                break;
-            default:
-                errorSintaxis(Token.OPREL, Token.PYC, Token.RBRA, Token.ELSE, Token.FI, Token.DOSP, Token.PARD);
-        }
-    }
-    public void E() {
-        switch(token.tipo) {
-            case Token.ID:
-            case Token.NUMENTERO:
-            case Token.NUMREAL:
-            case Token.PARI:
-                numeros.append("25 ");
-                T();
-                Ep();
-                break;
-            default:
-                errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
-        }
-    }
-    public void Ep() {
-        switch(token.tipo) {
-            case Token.OPAS:
-                numeros.append("26 ");
-                emparejar(Token.OPAS);
-                T();
-                Ep();
-                break;
-            case Token.OPREL:
-            case Token.PYC:
-            case Token.RBRA:
-            case Token.ELSE:
-            case Token.FI:
-            case Token.DOSP:
-            case Token.PARD:
-                numeros.append("27 ");
-                break;
-            default:
-                errorSintaxis(Token.OPAS, Token.OPREL, Token.PYC, Token.RBRA, Token.ELSE, Token.FI, Token.DOSP, Token.PARD);
-        }
-    }
-    public void T() {
-        switch(token.tipo) {
-            case Token.ID:
-            case Token.NUMENTERO:
-            case Token.NUMREAL:
-            case Token.PARI:
-                numeros.append("28 ");
-                F();
-                Tp();
-                break;
-            default:
-                errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
-        }
-    }
-    public void Tp() {
-        switch(token.tipo) {
-            case Token.OPMUL:
-                numeros.append("29 ");
-                emparejar(Token.OPMUL);
-                F();
-                Tp();
-                break;
-            case Token.OPAS:
-            case Token.OPREL:
-            case Token.PYC:
-            case Token.RBRA:
-            case Token.ELSE:
-            case Token.FI:
-            case Token.DOSP:
-            case Token.PARD:
-                numeros.append("30 ");
-                break;
-            default:
-                errorSintaxis(Token.OPMUL, Token.OPAS, Token.OPREL, Token.PYC, Token.RBRA, Token.ELSE, Token.FI, Token.DOSP, Token.PARD);
-        }
-    }
-    public void F() {
-        switch(token.tipo) {
-            case Token.ID:
-                numeros.append("31 ");
-                emparejar(Token.ID);
-                break;
-            case Token.NUMENTERO:
-                numeros.append("32 ");
-                emparejar(Token.NUMENTERO);
-                break;
-            case Token.NUMREAL:
-                numeros.append("33 ");
-                emparejar(Token.NUMREAL);
-                break;
-            case Token.PARI:
-                numeros.append("34 ");
-                emparejar(Token.PARI);
-                Expr();
-                emparejar(Token.PARD);
-                break;
-            default:
-                errorSintaxis(Token.ID, Token.NUMENTERO, Token.NUMREAL, Token.PARI);
-        }
+        Elemento S = new S();
+        return S.trad; //EDITADO
     }
     
     public void comprobarFinFichero() {
