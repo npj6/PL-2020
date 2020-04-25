@@ -28,7 +28,7 @@ public class TraductorDR {
         Simbolo output = new Simbolo(nombre, tipoSimbolo, nombreTrad);
         boolean creado = tsActual.anyadir(output);
         if (!creado) {
-            errorSemantico(1, errT);
+            errorSemantico(ERRYADECL, errT);
         }
         return output;
     }
@@ -36,9 +36,9 @@ public class TraductorDR {
     private Simbolo buscarSimbolo(String nombre) {
         Simbolo output = tsActual.buscar(nombre);
         if(output == null) {
-            errorSemantico(2, errT);
+            errorSemantico(ERRNODECL, errT);
         } else if (output.tipo != Simbolo.REAL && output.tipo != Simbolo.ENTERO) {
-            errorSemantico(4, errT);
+            errorSemantico(ERRNOSIMPLE, errT);
         }
         return output;
     }
@@ -60,30 +60,25 @@ public class TraductorDR {
     //MENSAJES DE ERROR
     Token errT; //sirve para guardar los errores de token usados en la interfaz de simbolo
     
-    private void errorSemantico(int codErr, Token tokenError) {
-        String output = "Error semantico ("+tokenError.fila+","+tokenError.columna+"): '"+tokenError.lexema+"'";
-        switch(codErr) {
-            case 1:
-                output += ", ya existe en este ambito";
-                break;
-            case 2:
-                output += ", no ha sido declarado";
-                break;
-            case 3:
-                output += ", tipos incompatibles entero/real";
-                break;
-            case 4:
-                output += " debe ser de tipo entero o real";
-                break;
-            case 5:
-                output += " debe ser de tipo entero";
-                break;
-            default:
-                output = ", esto no deberia de estar ocurriendo. La simulacion esta fallando.";
-        }
-        System.err.println(output);
-        System.exit(-1);
+  private final int ERRYADECL=1,ERRNODECL=2,ERRTIPOS=3,ERRNOSIMPLE=4,ERRNOENTERO=5;
+  private void errorSemantico(int nerror,Token tok)
+  {
+    System.err.print("Error semantico ("+tok.fila+","+tok.columna+"): en '"+tok.lexema+"', ");
+    switch (nerror) {
+      case ERRYADECL: System.err.println("ya existe en este ambito");
+         break;
+      case ERRNODECL: System.err.println("no ha sido declarado");
+         break;
+      case ERRTIPOS: System.err.println("tipos incompatibles entero/real");
+         break;
+      case ERRNOSIMPLE: System.err.println("debe ser de tipo entero o real");
+         break;
+      case ERRNOENTERO: System.err.println("debe ser de tipo entero");
+         break;
     }
+    System.exit(-1);
+  }
+
     
     static private ArrayList<Integer> order = new ArrayList<Integer>();
     
@@ -387,7 +382,7 @@ public class TraductorDR {
                     emparejar(Token.ASIG);
                     Expr = new Expr();
                     if (idT.simbolo.tipo == Simbolo.ENTERO && Expr.tipo == Simbolo.REAL) {
-                        errorSemantico(3, err);
+                        errorSemantico(ERRTIPOS, err);
                     }
                     if (idT.simbolo.tipo == Simbolo.REAL && Expr.tipo == Simbolo.ENTERO) {
                         Expr.trad = "itor("+Expr.trad+")";
@@ -400,7 +395,7 @@ public class TraductorDR {
                     emparejar(Token.IF);
                     Expr = new Expr();
                     if (Expr.tipo != Simbolo.ENTERO) {
-                        errorSemantico(5, err);
+                        errorSemantico(ERRNOENTERO, err);
                     }
                     emparejar(Token.DOSP);
                     Elemento I = new I(prefix, indent+"\t");
