@@ -28,7 +28,7 @@ public class TraductorDR {
         Simbolo output = new Simbolo(nombre, tipoSimbolo, nombreTrad);
         boolean creado = tsActual.anyadir(output);
         if (!creado) {
-            errorSemantico(1);
+            errorSemantico(1, errT);
         }
         return output;
     }
@@ -36,9 +36,9 @@ public class TraductorDR {
     private Simbolo buscarSimbolo(String nombre) {
         Simbolo output = tsActual.buscar(nombre);
         if(output == null) {
-            errorSemantico(2);
+            errorSemantico(2, errT);
         } else if (output.tipo != Simbolo.REAL && output.tipo != Simbolo.ENTERO) {
-            errorSemantico(4);
+            errorSemantico(4, errT);
         }
         return output;
     }
@@ -58,12 +58,9 @@ public class TraductorDR {
     }
     
     //MENSAJES DE ERROR
-    private Token tokenError;
-    private void setErrorToken() {
-        tokenError = token;
-    }
+    Token errT; //sirve para guardar los errores de token usados en la interfaz de simbolo
     
-    private void errorSemantico(int codErr) {
+    private void errorSemantico(int codErr, Token tokenError) {
         String output = "Error semantico ("+tokenError.fila+","+tokenError.columna+"): '"+tokenError.lexema+"'";
         switch(codErr) {
             case 1:
@@ -164,7 +161,7 @@ public class TraductorDR {
                 case Token.CLASS:
                     numeros.append("1 ");
                     emparejar(Token.CLASS);
-                    setErrorToken();
+                    errT = token;
                     IdToken idT = new IdToken(Token.ID);
                     idT.simbolo = crearSimbolo(idT.trad, Simbolo.CLASS, prefix+idT.trad);
                     crearAmbito();
@@ -222,7 +219,7 @@ public class TraductorDR {
                 case Token.FUN:
                     numeros.append("5 ");
                     emparejar(Token.FUN);
-                    setErrorToken();
+                    errT = token;
                     IdToken idT = new IdToken(Token.ID);
                     idT.simbolo = crearSimbolo(idT.trad, Simbolo.FUN, prefix+idT.trad);
                     crearAmbito();
@@ -288,7 +285,7 @@ public class TraductorDR {
                 case Token.FLOAT:
                     numeros.append("9 ");
                     Tipo Tipo = new Tipo();
-                    setErrorToken();
+                    errT = token;
                     IdToken idT = new IdToken(Token.ID);
                     idT.simbolo = crearSimbolo(idT.trad, Tipo.tipo, prefix+idT.trad);
                     this.trad = Tipo.trad + " " + idT.simbolo.nomtrad;
@@ -362,6 +359,7 @@ public class TraductorDR {
         public I(String prefix, String indent) {
             IdToken idT;
             Expr Expr;
+            Token err;
             switch(token.tipo) {
                 case Token.INT:
                 case Token.FLOAT:
@@ -382,14 +380,14 @@ public class TraductorDR {
                     break;
                 case Token.ID:
                     numeros.append("17 ");
-                    setErrorToken();
+                    errT = token;
                     idT = new IdToken(Token.ID);
                     idT.simbolo = buscarSimbolo(idT.trad);
-                    setErrorToken();
+                    err = token;
                     emparejar(Token.ASIG);
                     Expr = new Expr();
                     if (idT.simbolo.tipo == Simbolo.ENTERO && Expr.tipo == Simbolo.REAL) {
-                        errorSemantico(3);
+                        errorSemantico(3, err);
                     }
                     if (idT.simbolo.tipo == Simbolo.REAL && Expr.tipo == Simbolo.ENTERO) {
                         Expr.trad = "itor("+Expr.trad+")";
@@ -398,11 +396,11 @@ public class TraductorDR {
                     break;
                 case Token.IF:
                     numeros.append("18 ");
-                    setErrorToken();
+                    err = token;
                     emparejar(Token.IF);
                     Expr = new Expr();
                     if (Expr.tipo != Simbolo.ENTERO) {
-                        errorSemantico(5);
+                        errorSemantico(5, err);
                     }
                     emparejar(Token.DOSP);
                     Elemento I = new I(prefix, indent+"\t");
@@ -663,7 +661,7 @@ public class TraductorDR {
             switch(token.tipo) {
                 case Token.ID:
                     numeros.append("31 ");
-                    setErrorToken();
+                    errT = token;
                     IdToken idT = new IdToken(Token.ID);
                     idT.simbolo = buscarSimbolo(idT.trad);
                     this.tipo = idT.simbolo.tipo;
