@@ -629,6 +629,9 @@ public class TraductorDR {
                     }
                     Tp Tp = new Tp(opmulTipo);
                     this.tipo = Tp.tipo;
+                    if(Tp.previousItor) {
+                        this.previousItor = true;
+                    }
                     this.trad = opmulTrad + " " + F.trad + Tp.trad;
                     break;
                 case Token.OPAS:
